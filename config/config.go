@@ -1,5 +1,11 @@
 package config
 
+import (
+	"os"
+
+	"github.com/joho/godotenv"
+)
+
 type (
 	// Config stores values that
 	// is used through the service.
@@ -20,5 +26,17 @@ type (
 // NewConfig set a Config instance
 // based on environment variables
 func NewConfig() (*Config, error) {
-	return &Config{}, nil
+	if os.Getenv("ENV") != "" {
+		err := godotenv.Load()
+		if err != nil {
+			return &Config{}, err
+		}
+	}
+
+	return &Config{
+		Queue: Queue{
+			URL:  os.Getenv("RABBITMQ_URL"),
+			Name: os.Getenv("RABBITMQ_QUEUE_NAME"),
+		},
+	}, nil
 }
