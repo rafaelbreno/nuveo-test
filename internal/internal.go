@@ -10,7 +10,7 @@ type (
 	// that will be used through the microservices.
 	// E.g logging, config values, etc.
 	Internal struct {
-		config *config.Config
+		Cfg *config.Config
 		// L stands for Logger, just for
 		// a cleaner code
 		L *zap.Logger
@@ -24,7 +24,7 @@ func NewInternal(cfg *config.Config) (*Internal, error) {
 	// because it's not being used a custom config
 	l, _ := zap.NewProduction()
 	return &Internal{
-		L:      l,
-		config: cfg,
+		L:   l,
+		Cfg: cfg,
 	}, nil
 }
