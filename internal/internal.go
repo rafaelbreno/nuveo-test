@@ -19,12 +19,12 @@ type (
 
 // NewInternal creates and instance for
 // Internal struct.
-func NewInternal(cfg *config.Config) (*Internal, error) {
+func NewInternal(cfg *config.Config) *Internal {
 	// There's no need to handle the returned error
 	// because it's not being used a custom config
 	l, _ := zap.NewProduction()
 	return &Internal{
 		L:   l,
 		Cfg: cfg,
-	}, nil
+	}
 }
