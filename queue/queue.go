@@ -23,6 +23,12 @@ func NewQueue(in *internal.Internal) *Queue {
 	}
 }
 
+// Consumer returns the rabbitmq.Consumer
+// pointer.
+func (q *Queue) Consumer() *rabbitmq.Consumer {
+	return q.consumer
+}
+
 // SetConsumer creates a new instance
 // of RabbitMQ Consumer and insert into
 // Queue struct
@@ -33,6 +39,7 @@ func (q *Queue) SetConsumer() error {
 		return err
 	}
 	q.consumer = &c
+
 	return nil
 }
 
@@ -47,4 +54,10 @@ func (q *Queue) SetPublisher() error {
 	}
 	q.publisher = p
 	return nil
+}
+
+// Publisher returns the rabbitmq.Publisher
+// pointer.
+func (q *Queue) Publisher() *rabbitmq.Publisher {
+	return q.publisher
 }
