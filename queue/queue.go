@@ -16,23 +16,35 @@ type (
 )
 
 // NewQueue set a Queue instance
-// given a Config
-func NewQueue(in *internal.Internal) (*Queue, error) {
-	c, err := rabbitmq.NewConsumer(in.Cfg.Queue.URL, rabbitmq.Config{})
-	if err != nil {
-		in.L.Error(err.Error())
-		return &Queue{}, err
-	}
-
-	p, err := rabbitmq.NewPublisher(in.Cfg.Queue.URL, rabbitmq.Config{})
-	if err != nil {
-		in.L.Error(err.Error())
-		return &Queue{}, err
-	}
-
+// given an Internal struct
+func NewQueue(in *internal.Internal) *Queue {
 	return &Queue{
-		consumer:  &c,
-		publisher: p,
-		internal:  in,
-	}, nil
+		internal: in,
+	}
+}
+
+// SetConsumer creates a new instance
+// of RabbitMQ Consumer and insert into
+// Queue struct
+func (q *Queue) SetConsumer() error {
+	c, err := rabbitmq.NewConsumer(q.internal.Cfg.Queue.URL, rabbitmq.Config{})
+	if err != nil {
+		q.internal.L.Error(err.Error())
+		return err
+	}
+	q.consumer = &c
+	return nil
+}
+
+// SetPublisher creates a new instance
+// of RabbitMQ Publisher and insert into
+// Queue struct
+func (q *Queue) SetPublisher() error {
+	p, err := rabbitmq.NewPublisher(q.internal.Cfg.Queue.URL, rabbitmq.Config{})
+	if err != nil {
+		q.internal.L.Error(err.Error())
+		return err
+	}
+	q.publisher = p
+	return nil
 }
