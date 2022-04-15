@@ -35,7 +35,7 @@ func NewFile(in *internal.Internal) (File, error) {
 // Write will receive a given string
 // and write it in a file.
 func (f *File) Write(key, str string) error {
-	file, err := os.Create(f.getFilePath(key))
+	file, err := os.OpenFile(f.getFilePath(key), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 
 	if err != nil {
 		f.in.L.Error(err.Error())
