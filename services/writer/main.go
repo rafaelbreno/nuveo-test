@@ -7,8 +7,7 @@ import (
 
 	"github.com/rafaelbreno/nuveo-test/config"
 	"github.com/rafaelbreno/nuveo-test/internal"
-	"github.com/rafaelbreno/nuveo-test/queue"
-	"github.com/wagslane/go-rabbitmq"
+	"github.com/rafaelbreno/nuveo-test/services/writer/writer"
 )
 
 func main() {
@@ -18,32 +17,13 @@ func main() {
 	}
 	in := internal.NewInternal(cfg)
 
-	q := queue.NewQueue(in)
-
-	if err := q.SetConsumer(); err != nil {
-		in.L.Fatal(err.Error())
-	}
+	w := writer.NewWriter(in)
 
 	defer func() {
-		q.Consumer().Close()
+		w.CloseConsumer()
 	}()
 
-	if err := q.
-		Consumer().
-		StartConsuming(func(d rabbitmq.Delivery) rabbitmq.Action {
-			// implement logic
-			return rabbitmq.Ack
-		},
-			in.Cfg.Queue.Name,
-			[]string{},
-			rabbitmq.WithConsumeOptionsConcurrency(10),
-			rabbitmq.WithConsumeOptionsQueueDurable,
-			rabbitmq.WithConsumeOptionsQuorum,
-			rabbitmq.WithConsumeOptionsBindingExchangeName("events"),
-			rabbitmq.WithConsumeOptionsBindingExchangeKind("topic"),
-			rabbitmq.WithConsumeOptionsBindingExchangeDurable,
-			rabbitmq.WithConsumeOptionsConsumerName(in.Cfg.Queue.ConsumerName),
-		); err != nil {
+	if err := w.StartConsuming(); err != nil {
 		in.L.Fatal(err.Error())
 	}
 
