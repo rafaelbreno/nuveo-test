@@ -12,7 +12,6 @@ import (
 type (
 	// File is responsible for
 	File struct {
-		_  struct{}
 		in *internal.Internal
 	}
 )
