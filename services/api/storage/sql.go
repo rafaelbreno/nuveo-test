@@ -3,6 +3,7 @@ package storage
 import (
 	"fmt"
 
+	"github.com/rafaelbreno/nuveo-test/entity"
 	"github.com/rafaelbreno/nuveo-test/internal"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -40,8 +41,21 @@ func NewSQL(in *internal.Internal) (*SQL, error) {
 		return &SQL{}, err
 	}
 
-	return &SQL{
+	s := &SQL{
 		in:     in,
 		Client: db,
-	}, err
+	}
+
+	if err := s.runMigrations(); err != nil {
+		in.L.Error(err.Error())
+		return &SQL{}, err
+	}
+
+	return s, nil
+}
+
+func (s *SQL) runMigrations() error {
+	return s.
+		Client.
+		AutoMigrate(entity.User{})
 }
