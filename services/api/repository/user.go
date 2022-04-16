@@ -5,6 +5,7 @@ import (
 	"github.com/rafaelbreno/nuveo-test/internal"
 	"github.com/rafaelbreno/nuveo-test/queue"
 	"github.com/rafaelbreno/nuveo-test/services/api/storage"
+	"gorm.io/gorm"
 )
 
 type (
@@ -39,7 +40,7 @@ func NewUserRepo(st *storage.Storage, in *internal.Internal, queue *queue.Queue)
 
 // Create receives an entity and inserts into DB.
 func (ur *UserRepo) Create(u entity.User) (entity.User, error) {
-	if err := ur.st.SQL.Client.Create(u).Error; err != nil {
+	if err := ur.DB().Create(u).Error; err != nil {
 		ur.in.L.Error(err.Error())
 		return entity.User{}, err
 	}
@@ -49,13 +50,13 @@ func (ur *UserRepo) Create(u entity.User) (entity.User, error) {
 // Update receives an entity and id, and update it.
 func (ur *UserRepo) Update(id string, u entity.User) (entity.User, error) {
 	user := new(entity.User)
-	if err := ur.st.SQL.Client.Where("uuid = ?", id).First(user).Error; err != nil {
+	if err := ur.DB().Where("uuid = ?", id).First(user).Error; err != nil {
 		ur.in.L.Error(err.Error())
 		return entity.User{}, err
 	}
 	user.UpdateFields(u)
 
-	if err := ur.st.SQL.Client.Save(user).Error; err != nil {
+	if err := ur.DB().Save(user).Error; err != nil {
 		ur.in.L.Error(err.Error())
 		return entity.User{}, err
 	}
@@ -66,7 +67,7 @@ func (ur *UserRepo) Update(id string, u entity.User) (entity.User, error) {
 // Read receives an ID and returns a user.
 func (ur *UserRepo) Read(id string) (entity.User, error) {
 	user := new(entity.User)
-	if err := ur.st.SQL.Client.Where("uuid = ?", id).First(user).Error; err != nil {
+	if err := ur.DB().Where("uuid = ?", id).First(user).Error; err != nil {
 		ur.in.L.Error(err.Error())
 		return *user, err
 	}
@@ -76,7 +77,7 @@ func (ur *UserRepo) Read(id string) (entity.User, error) {
 // ReadAll returns all users in DB.
 func (ur *UserRepo) ReadAll() ([]entity.User, error) {
 	users := new([]entity.User)
-	if err := ur.st.SQL.Client.Find(users).Error; err != nil {
+	if err := ur.DB().Find(users).Error; err != nil {
 		ur.in.L.Error(err.Error())
 		return *users, err
 	}
@@ -85,9 +86,14 @@ func (ur *UserRepo) ReadAll() ([]entity.User, error) {
 
 // Delete deletes a row from DB with given ID.
 func (ur *UserRepo) Delete(id string) error {
-	err := ur.st.SQL.Client.Where("uuid = ?", id).Delete(&entity.User{}).Error
+	err := ur.DB().Where("uuid = ?", id).Delete(&entity.User{}).Error
 	if err != nil {
 		ur.in.L.Error(err.Error())
 	}
 	return nil
+}
+
+// DB shortcut for *gorm.DB value.
+func (ur *UserRepo) DB() *gorm.DB {
+	return ur.st.SQL.Client
 }
