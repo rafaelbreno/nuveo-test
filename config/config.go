@@ -12,8 +12,9 @@ type (
 	// E.g set RabbitMQ connection
 	// E.g set API port
 	Config struct {
-		Queue   Queue
-		Service Service
+		Queue    Queue
+		Service  Service
+		Database Database
 	}
 	// Queue stores values to
 	// set Queue connection and
@@ -22,6 +23,17 @@ type (
 		URL          string
 		Name         string
 		ConsumerName string
+	}
+
+	// Database stores values to
+	// set Database connections.
+	// e.g Postgres, Redis, etc.
+	Database struct {
+		PGHost     string
+		PGPort     string
+		PGUser     string
+		PGPassword string
+		PGDBName   string
 	}
 
 	// Service stores value
@@ -47,6 +59,13 @@ func NewConfig() (*Config, error) {
 			URL:          os.Getenv("RABBITMQ_URL"),
 			Name:         os.Getenv("RABBITMQ_QUEUE_NAME"),
 			ConsumerName: os.Getenv("RABBITMQ_CONSUMER_NAME"),
+		},
+		Database: Database{
+			PGHost:     os.Getenv("PGSQL_HOST"),
+			PGPort:     os.Getenv("PGSQL_PORT"),
+			PGUser:     os.Getenv("PGSQL_USER"),
+			PGPassword: os.Getenv("PGSQL_PASSWORD"),
+			PGDBName:   os.Getenv("PGSQL_DBNAME"),
 		},
 		Service: Service{
 			NewClients: os.Getenv("NEW_CLIENTS"),
