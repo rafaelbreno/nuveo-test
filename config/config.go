@@ -23,6 +23,10 @@ type (
 		URL          string
 		Name         string
 		ConsumerName string
+		User         string
+		Password     string
+		Port         string
+		QueueName    string
 	}
 
 	// Database stores values to
@@ -41,13 +45,15 @@ type (
 	// the services
 	Service struct {
 		NewClients string
+		APIPort    string
+		APIName    string
 	}
 )
 
 // NewConfig set a Config instance
 // based on environment variables
 func NewConfig() (*Config, error) {
-	if os.Getenv("ENV") != "" {
+	if os.Getenv("ENV") != "docker" {
 		err := godotenv.Load()
 		if err != nil {
 			return &Config{}, err
@@ -57,8 +63,12 @@ func NewConfig() (*Config, error) {
 	return &Config{
 		Queue: Queue{
 			URL:          os.Getenv("RABBITMQ_URL"),
-			Name:         os.Getenv("RABBITMQ_QUEUE_NAME"),
+			QueueName:    os.Getenv("RABBITMQ_QUEUE_NAME"),
 			ConsumerName: os.Getenv("RABBITMQ_CONSUMER_NAME"),
+			User:         os.Getenv("RABBITMQ_USER"),
+			Password:     os.Getenv("RABBITMQ_PASSWORD"),
+			Port:         os.Getenv("RABBITMQ_PORT"),
+			Name:         os.Getenv("RABBITMQ_NAME"),
 		},
 		Database: Database{
 			PGHost:     os.Getenv("PGSQL_HOST"),
@@ -69,6 +79,8 @@ func NewConfig() (*Config, error) {
 		},
 		Service: Service{
 			NewClients: os.Getenv("NEW_CLIENTS"),
+			APIPort:    os.Getenv("API_PORT"),
+			APIName:    os.Getenv("API_NAME"),
 		},
 	}, nil
 }
