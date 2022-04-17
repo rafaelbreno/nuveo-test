@@ -30,12 +30,12 @@ type (
 
 // NewUserRepo returns an instance of UserRepo
 // given Storage, Internal and Queue.
-func NewUserRepo(st *storage.Storage, in *internal.Internal, queue *queue.Queue) UserRepo {
-	return UserRepo{
+func NewUserRepo(st *storage.Storage, in *internal.Internal, queue *queue.Queue) UserRepoI {
+	return UserRepoI(&UserRepo{
 		st:    st,
 		in:    in,
 		queue: queue,
-	}
+	})
 }
 
 // Create receives an entity and inserts into DB.
