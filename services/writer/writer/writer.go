@@ -76,13 +76,26 @@ func (w *Writer) writeEntry(d rabbitmq.Delivery) rabbitmq.Action {
 
 	u := entity.User{}
 
-	if err := json.Unmarshal(d.Body, &u); err != nil {
+	var err error
+
+	if err = json.Unmarshal(d.Body, &u); err != nil {
 		w.In.L.Error(err.Error())
 		// sending to a dead-letter queue
 		return rabbitmq.NackDiscard
 	}
 
-	if err := w.Storage.MarshalAndWrite(u, u.UUID); err != nil {
+	switch d.RoutingKey {
+	case "create":
+		fallthrough
+	case "update":
+		err = w.Storage.MarshalAndWrite(u, u.UUID)
+	case "delete":
+		err = w.Storage.Delete(u.UUID)
+	default:
+		err = fmt.Errorf(`routing key "%s" not supported`, d.RoutingKey)
+	}
+
+	if err != nil {
 		w.In.L.Error(err.Error())
 		// sending to a dead-letter queue
 		return rabbitmq.NackDiscard
