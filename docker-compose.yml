@@ -1,0 +1,59 @@
+version: "3"
+
+services:
+  api:
+    build:
+      context: services/api/
+      dockerfile: ../../.docker/golang/Dockerfile
+    ports:
+      - "${API_PORT}:${API_PORT}"
+    image: "${API_NAME}"
+    container_name: "${API_NAME}"
+    environment:
+      - PGSQL_HOST=${PGSQL_HOST}
+      - PGSQL_PORT=${PGSQL_PORT}
+      - PGSQL_USER=${PGSQL_USER}
+      - PGSQL_PASSWORD=${PGSQL_PASSWORD}
+      - PGSQL_DBNAME=${PGSQL_DBNAME}
+      - PGSQL_NAME=${PGSQL_NAME}
+      - RABBITMQ_QUEUE_NAME=${RABBITMQ_QUEUE_NAME}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_NAME=${RABBITMQ_NAME}
+  writer:
+    build:
+      context: services/writer/
+      dockerfile: ../../.docker/golang/Dockerfile
+    image: "${WRITER_NAME}"
+    container_name: "${WRITER_NAME}"
+    environment:
+      - RABBITMQ_QUEUE_NAME=${RABBITMQ_QUEUE_NAME}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_NAME=${RABBITMQ_NAME}
+  postgres:
+    build:
+      context: .
+      dockerfile: .docker/postgres/Dockerfile
+    ports:
+      - "${PGSQL_PORT}:${PGSQL_PORT}"
+    image: ${PGSQL_NAME}
+    container_name: ${PGSQL_NAME}
+    environment:
+      - PGDATA=${PGSQL_DATA}
+      - POSTGRES_DB=${PGSQL_DBNAME}
+      - POSTGRES_USER=${PGSQL_USER}
+      - POSTGRES_PASSWORD=${PGSQL_PASSWORD}
+  rabbitmq:
+    image: rabbitmq:alpine
+    container_name: "${RABBITMQ_NAME}"
+    ports:
+        - "${RABBITMQ_PORT}:${RABBITMQ_PORT}"
+        - "1${RABBITMQ_PORT}:1${RABBITMQ_PORT}"
+    volumes:
+        - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+        - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+    networks:
+        - rabbitmq_go_net
