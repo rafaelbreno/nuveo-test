@@ -61,3 +61,27 @@ func (q *Queue) SetPublisher() error {
 func (q *Queue) Publisher() *rabbitmq.Publisher {
 	return q.publisher
 }
+
+// Publish sends data to Queue.
+func (q *Queue) Publish(data []byte, key ...string) error {
+	return q.publisher.Publish(
+		data,
+		key,
+		rabbitmq.WithPublishOptionsContentType("application/json"),
+		rabbitmq.WithPublishOptionsMandatory,
+		rabbitmq.WithPublishOptionsPersistentDelivery,
+		rabbitmq.WithPublishOptionsExchange("events"),
+	)
+}
+
+// PublishCreate is a shortcut
+// for Publish(data, "create")
+func (q *Queue) PublishCreate(data []byte) error {
+	return q.Publish(data, "create")
+}
+
+// PublishDelete is a shortcut
+// for Publish(data, "delete")
+func (q *Queue) PublishDelete(data []byte) error {
+	return q.Publish(data, "delete")
+}
