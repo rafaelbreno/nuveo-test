@@ -1,6 +1,9 @@
 package repository
 
 import (
+	"encoding/json"
+	"sync"
+
 	"github.com/rafaelbreno/nuveo-test/entity"
 	"github.com/rafaelbreno/nuveo-test/internal"
 	"github.com/rafaelbreno/nuveo-test/queue"
@@ -25,6 +28,7 @@ type (
 		st    *storage.Storage
 		in    *internal.Internal
 		queue *queue.Queue
+		mu    sync.Mutex
 	}
 )
 
@@ -35,6 +39,7 @@ func NewUserRepo(st *storage.Storage, in *internal.Internal, queue *queue.Queue)
 		st:    st,
 		in:    in,
 		queue: queue,
+		mu:    sync.Mutex{},
 	})
 }
 
@@ -44,6 +49,9 @@ func (ur *UserRepo) Create(u entity.User) (entity.User, error) {
 		ur.in.L.Error(err.Error())
 		return entity.User{}, err
 	}
+
+	go ur.Publish(u, "create")
+
 	return u, nil
 }
 
@@ -60,6 +68,8 @@ func (ur *UserRepo) Update(id string, u entity.User) (entity.User, error) {
 		ur.in.L.Error(err.Error())
 		return entity.User{}, err
 	}
+
+	go ur.Publish(u, "update")
 
 	return *user, nil
 }
@@ -90,10 +100,42 @@ func (ur *UserRepo) Delete(id string) error {
 	if err != nil {
 		ur.in.L.Error(err.Error())
 	}
+
+	go ur.Publish(entity.User{
+		UUID: id,
+	}, "update")
+
 	return nil
 }
 
 // DB shortcut for *gorm.DB value.
 func (ur *UserRepo) DB() *gorm.DB {
 	return ur.st.SQL.Client
+}
+
+// Publish is a shortcut to insert
+// data into Queue.
+func (ur *UserRepo) Publish(u entity.User, action string) {
+	ur.mu.Lock()
+	defer ur.mu.Unlock()
+	b, err := json.Marshal(u)
+	if err != nil {
+		ur.in.L.Error(err.Error())
+		return
+	}
+
+	switch action {
+	case "create":
+		fallthrough
+	case "update":
+		if err := ur.queue.PublishCreate(b); err != nil {
+			ur.in.L.Error(err.Error())
+		}
+		return
+	case "delete":
+		if err := ur.queue.PublishDelete(b); err != nil {
+			ur.in.L.Error(err.Error())
+		}
+		return
+	}
 }
