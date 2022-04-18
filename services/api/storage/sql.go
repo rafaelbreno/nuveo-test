@@ -2,11 +2,13 @@ package storage
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/rafaelbreno/nuveo-test/entity"
 	"github.com/rafaelbreno/nuveo-test/internal"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 type (
@@ -34,12 +36,26 @@ func NewSQL(in *internal.Internal) (*SQL, error) {
 		in.Cfg.Database.PGPassword,
 		in.Cfg.Database.PGDBName,
 	)
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	var db *gorm.DB
+	var err error
+
+	for i := int64(1); i <= 5; i++ {
+		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
+			Logger: logger.Default.LogMode(logger.Silent),
+		})
+		if err != nil {
+			in.L.Error(err.Error())
+			time.Sleep(time.Second * time.Duration(i*2))
+			continue
+		}
+		break
+	}
 
 	if err != nil {
-		in.L.Error(err.Error())
 		return &SQL{}, err
 	}
+
+	in.L.Info("connected to db")
 
 	s := &SQL{
 		in:     in,

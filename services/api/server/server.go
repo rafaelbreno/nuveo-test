@@ -48,4 +48,6 @@ func (s *Server) Start() {
 	r.Put("user/:uuid", uh.Update)
 	r.Patch("user/:uuid", uh.Update)
 	r.Delete("user/:uuid", uh.Delete)
+
+	s.HTTP.Listen(":" + s.in.Cfg.Service.APIPort)
 }

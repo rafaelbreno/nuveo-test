@@ -1,6 +1,9 @@
 package queue
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/rafaelbreno/nuveo-test/internal"
 	rabbitmq "github.com/wagslane/go-rabbitmq"
 )
@@ -23,6 +26,23 @@ func NewQueue(in *internal.Internal) *Queue {
 	}
 }
 
+var (
+	queueTemplate = `amqp://%s:%s@%s:%s/`
+)
+
+func (q *Queue) setQueueURL() string {
+	url := fmt.Sprintf(queueTemplate,
+		q.internal.Cfg.Queue.User,
+		q.internal.Cfg.Queue.Password,
+		q.internal.Cfg.Queue.Host,
+		q.internal.Cfg.Queue.Port,
+	)
+
+	q.internal.L.Info(url)
+
+	return url
+}
+
 // Consumer returns the rabbitmq.Consumer
 // pointer.
 func (q *Queue) Consumer() *rabbitmq.Consumer {
@@ -33,11 +53,23 @@ func (q *Queue) Consumer() *rabbitmq.Consumer {
 // of RabbitMQ Consumer and insert into
 // Queue struct
 func (q *Queue) SetConsumer() error {
-	c, err := rabbitmq.NewConsumer(q.internal.Cfg.Queue.URL, rabbitmq.Config{})
+	var c rabbitmq.Consumer
+	var err error
+	for i := 1; i <= 5; i++ {
+		c, err = rabbitmq.NewConsumer(q.setQueueURL(), rabbitmq.Config{})
+		if err != nil {
+			q.internal.L.Error(err.Error())
+			time.Sleep(time.Second * time.Duration(i*2))
+			continue
+		}
+		break
+	}
 	if err != nil {
 		q.internal.L.Error(err.Error())
 		return err
 	}
+	q.internal.L.Info("consumer set")
+
 	q.consumer = &c
 
 	return nil
@@ -47,11 +79,22 @@ func (q *Queue) SetConsumer() error {
 // of RabbitMQ Publisher and insert into
 // Queue struct
 func (q *Queue) SetPublisher() error {
-	p, err := rabbitmq.NewPublisher(q.internal.Cfg.Queue.URL, rabbitmq.Config{})
+	var p *rabbitmq.Publisher
+	var err error
+	for i := 1; i <= 5; i++ {
+		p, err = rabbitmq.NewPublisher(q.setQueueURL(), rabbitmq.Config{})
+		if err != nil {
+			q.internal.L.Error(err.Error())
+			time.Sleep(time.Second * time.Duration(i*2))
+			continue
+		}
+		break
+	}
+
 	if err != nil {
-		q.internal.L.Error(err.Error())
 		return err
 	}
+	q.internal.L.Info("publisher set")
 	q.publisher = p
 	return nil
 }
