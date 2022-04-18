@@ -23,6 +23,7 @@ type (
 		URL          string
 		Name         string
 		ConsumerName string
+		Host         string
 		User         string
 		Password     string
 		Port         string
@@ -69,6 +70,7 @@ func NewConfig() (*Config, error) {
 			Password:     os.Getenv("RABBITMQ_PASSWORD"),
 			Port:         os.Getenv("RABBITMQ_PORT"),
 			Name:         os.Getenv("RABBITMQ_NAME"),
+			Host:         os.Getenv("RABBITMQ_HOST"),
 		},
 		Database: Database{
 			PGHost:     os.Getenv("PGSQL_HOST"),
